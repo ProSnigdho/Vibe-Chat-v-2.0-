@@ -1,0 +1,67 @@
+:root {
+  --primary: #008069;
+  --secondary: #25d366;
+  --bg-main: #f0f2f5;
+  --bg-sidebar: #ffffff;
+  --text-primary: #111b21;
+  --text-secondary: #667781;
+  --bubble-out: #dcf8c6;
+  --bubble-in: #ffffff;
+  --border: #e9edef;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-shadow: 0 6px 18px rgba(11, 20, 26, 0.05);
+}
+
+.chat-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar {
+  width: 30%;
+  min-width: 300px;
+  max-width: 450px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window {
+  flex: 1;
+  background-color: #efeae2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+  opacity: 0.06;
+  pointer-events: none;
+}
