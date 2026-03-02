@@ -14,7 +14,7 @@ const useWebSocket = (conversationId) => {
         socketRef.current = socket;
 
         socket.onmessage = (e) => {
-            const data = json.parse(e.data);
+            const data = JSON.parse(e.data);
             addMessage(data);
         };
 
@@ -29,7 +29,7 @@ const useWebSocket = (conversationId) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({
                 message,
-                sender_id: 1, // temporary hardcoded for demo, should come from auth
+                sender_id: user?.id,
             }));
         }
     };

@@ -1,29 +1,28 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message, Divider } from 'antd';
-import { UserOutlined, LockOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Typography, Card, message, Space, Divider, Select } from 'antd';
+import { UserOutlined, LockOutlined, MailOutlined, ArrowRightOutlined, TeamOutlined } from '@ant-design/icons';
 import api from '../../api';
-import useAuthStore from '../../store/authStore';
 
 const { Title, Text } = Typography;
 
-const Login = ({ onSwitchToSignup }) => {
+const Signup = ({ onSwitchToLogin }) => {
   const [loading, setLoading] = useState(false);
-  const setAuth = useAuthStore((state) => state.setAuth);
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const res = await api.post('auth/login/', values);
-      const token = res.data.access;
-      localStorage.setItem('token', token);
-      
-      const profileRes = await api.get('auth/profile/');
-      setAuth(profileRes.data.user, token);
-      message.success('Welcome back!');
+      await api.post('auth/register/', values);
+      message.success('Registration successful! Please login.');
+      onSwitchToLogin();
     } catch (err) {
-      console.error(err);
-      const errorMsg = err.response?.data?.detail || 'Login failed. Please check your credentials.';
-      message.error(errorMsg);
+      const errorData = err.response?.data;
+      if (errorData) {
+        // If it's a field-specific error (like username already exists)
+        const firstError = Object.values(errorData)[0];
+        message.error(Array.isArray(firstError) ? firstError[0] : 'Registration failed');
+      } else {
+        message.error('Registration failed. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -47,19 +46,19 @@ const Login = ({ onSwitchToSignup }) => {
         boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Title level={2} style={{ color: 'white', margin: 0, fontWeight: 700 }}>Vibe Chat</Title>
-          <Text style={{ color: 'var(--text-secondary)' }}>Log in to your workspace</Text>
+          <Title level={2} style={{ color: 'white', margin: 0, fontWeight: 700 }}>Join the Vibe</Title>
+          <Text style={{ color: 'var(--text-secondary)' }}>Create your account to start chatting</Text>
         </div>
 
         <Form
-          name="login"
+          name="signup"
           layout="vertical"
           onFinish={onFinish}
           requiredMark={false}
         >
           <Form.Item
             name="username"
-            rules={[{ required: true, message: 'Username is required!' }]}
+            rules={[{ required: true, message: 'Please input your username!' }]}
           >
             <Input 
               prefix={<UserOutlined style={{ color: 'rgba(255,255,255,0.45)' }} />} 
@@ -70,14 +69,44 @@ const Login = ({ onSwitchToSignup }) => {
           </Form.Item>
 
           <Form.Item
+            name="email"
+            rules={[
+              { required: true, message: 'Please input your email!' },
+              { type: 'email', message: 'Please enter a valid email!' }
+            ]}
+          >
+            <Input 
+              prefix={<MailOutlined style={{ color: 'rgba(255,255,255,0.45)' }} />} 
+              placeholder="Email address" 
+              size="large"
+              style={{ borderRadius: '12px' }}
+            />
+          </Form.Item>
+
+          <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Password is required!' }]}
+            rules={[{ required: true, message: 'Please input your password!' }]}
           >
             <Input.Password 
               prefix={<LockOutlined style={{ color: 'rgba(255,255,255,0.45)' }} />} 
               placeholder="Password" 
               size="large"
               style={{ borderRadius: '12px' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="role"
+            initialValue="user"
+          >
+            <Select 
+              suffixIcon={<TeamOutlined style={{ color: 'rgba(255,255,255,0.45)' }} />} 
+              size="large"
+              style={{ borderRadius: '12px' }}
+              options={[
+                { label: 'Standard User', value: 'user' },
+                { label: 'Staff Member', value: 'staff' },
+              ]}
             />
           </Form.Item>
 
@@ -95,23 +124,23 @@ const Login = ({ onSwitchToSignup }) => {
                 marginTop: '10px'
               }}
             >
-              Sign In <ArrowRightOutlined />
+              Sign Up <ArrowRightOutlined />
             </Button>
           </Form.Item>
         </Form>
 
         <Divider style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
-          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>NEW TO VIBE?</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>OR</Text>
         </Divider>
 
         <div style={{ textAlign: 'center' }}>
-          <Text style={{ color: 'var(--text-secondary)' }}>Don't have an account? </Text>
+          <Text style={{ color: 'var(--text-secondary)' }}>Already have an account? </Text>
           <Button 
             type="link" 
-            onClick={onSwitchToSignup} 
+            onClick={onSwitchToLogin} 
             style={{ color: 'var(--primary)', fontWeight: 600, padding: 0 }}
           >
-            Sign Up
+            Sign In
           </Button>
         </div>
       </div>
@@ -119,4 +148,4 @@ const Login = ({ onSwitchToSignup }) => {
   );
 };
 
-export default Login;
+export default Signup;
