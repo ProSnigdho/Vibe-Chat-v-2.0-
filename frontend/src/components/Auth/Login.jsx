@@ -18,7 +18,13 @@ const Login = ({ onSwitchToSignup }) => {
       localStorage.setItem('token', token);
       
       const profileRes = await api.get('auth/profile/');
-      setAuth(profileRes.data.user, token);
+      const userData = {
+        id: profileRes.data.user_id,
+        username: profileRes.data.username,
+        email: profileRes.data.email,
+        profile: profileRes.data
+      };
+      setAuth(userData, token);
       message.success('Welcome back!');
     } catch (err) {
       console.error(err);

@@ -8,10 +8,29 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+
     class Meta:
         model = Profile
-        fields = ['user', 'avatar', 'bio', 'online_status', 'last_seen', 'role']
+        fields = ['user_id', 'username', 'email', 'avatar', 'bio', 'online_status', 'last_seen', 'role']
+
+    def update(self, instance, validated_data):
+        # Handle nested User update
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            user = instance.user
+            user.username = user_data.get('username', user.username)
+            user.email = user_data.get('email', user.email)
+            user.save()
+        
+        # Handle Profile fields
+        instance.avatar = validated_data.get('avatar', instance.avatar)
+        instance.bio = validated_data.get('bio', instance.bio)
+        instance.role = validated_data.get('role', instance.role)
+        instance.save()
+        return instance
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

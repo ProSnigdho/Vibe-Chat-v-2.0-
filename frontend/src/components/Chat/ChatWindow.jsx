@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Avatar, Input, Button, Typography, Space, Card } from 'antd';
+import { Avatar, Input, Button, Typography, Space } from 'antd';
 import { 
   SendOutlined, 
   SmileOutlined, 
   PaperClipOutlined, 
-  AudioOutlined,
   SearchOutlined,
   MoreOutlined,
   PhoneOutlined,
-  VideoCameraOutlined
+  VideoCameraOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import useChatStore from '../../store/chatStore';
 import api from '../../api';
@@ -23,6 +23,14 @@ const ChatWindow = () => {
   const [input, setInput] = useState('');
   const { sendMessage } = useWebSocket(activeConversation?.id);
   const scrollRef = React.useRef(null);
+
+  const SERVER_URL = 'http://localhost:8000';
+
+  const getFullUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${SERVER_URL}${path}`;
+  };
 
   React.useEffect(() => {
     if (activeConversation) {
@@ -71,6 +79,7 @@ const ChatWindow = () => {
           {(() => {
             const participants = activeConversation?.participants || [];
             const otherUser = participants.find(p => p.id !== user?.id) || participants[0];
+            const avatarUrl = getFullUrl(otherUser?.profile?.avatar);
             
             if (!otherUser) {
               return <Text style={{ color: 'white' }}>Conversation</Text>;
@@ -78,7 +87,12 @@ const ChatWindow = () => {
 
             return (
               <>
-                <Avatar size={40} src={`https://i.pravatar.cc/150?u=${otherUser.id}`} />
+                <Avatar 
+                  size={40} 
+                  src={avatarUrl} 
+                  icon={!avatarUrl && <UserOutlined />}
+                  style={{ backgroundColor: 'var(--primary)' }}
+                />
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <Text strong style={{ color: 'white' }}>{otherUser.username}</Text>
                   <Text style={{ color: 'var(--secondary)', fontSize: '10px' }}>Active now</Text>
@@ -109,9 +123,19 @@ const ChatWindow = () => {
         className="scrollbar-hidden"
       >
         {messages.map((msg, index) => {
-          // Handle both API (msg.sender.id) and WebSocket (msg.sender_id)
+          // Robust sender identification
           const senderId = msg.sender?.id || msg.sender_id;
-          const isMe = senderId === user?.id;
+          const currentUserId = user?.id || user?.user_id;
+          const isMe = senderId !== undefined && senderId !== null && senderId == currentUserId;
+          
+          // Determine avatar URL for the sender
+          let senderAvatar = null;
+          if (!isMe) {
+            const participants = activeConversation?.participants || [];
+            const sender = participants.find(p => p.id == senderId);
+            senderAvatar = getFullUrl(sender?.profile?.avatar);
+          }
+
           return (
             <div 
               key={msg.id || index} 
@@ -119,19 +143,28 @@ const ChatWindow = () => {
                 display: 'flex', 
                 justifyContent: isMe ? 'flex-end' : 'flex-start',
                 alignItems: 'flex-end',
-                gap: '8px'
+                gap: '8px',
+                width: '100%'
               }}
             >
-              {!isMe && <Avatar size={32} src={`https://i.pravatar.cc/150?u=${senderId}`} />}
+              {!isMe && (
+                <Avatar 
+                  size={32} 
+                  src={senderAvatar} 
+                  icon={!senderAvatar && <UserOutlined />}
+                  style={{ backgroundColor: 'var(--primary)', flexShrink: 0 }}
+                />
+              )}
               <div style={{
                 maxWidth: '70%',
-                padding: '12px 16px',
+                padding: '10px 14px',
                 borderRadius: isMe ? '16px 16px 0 16px' : '16px 16px 16px 0',
-                background: isMe ? 'var(--primary)' : 'rgba(255, 255, 255, 0.05)',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                background: isMe ? 'var(--primary)' : 'rgba(255, 255, 255, 0.08)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                wordBreak: 'break-word'
               }}>
-                <Text style={{ color: 'white' }}>{msg.content}</Text>
-                <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                <Text style={{ color: 'white', display: 'block' }}>{msg.content}</Text>
+                <div style={{ textAlign: 'right', marginTop: '2px' }}>
                   <Text style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>
                     {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                   </Text>
